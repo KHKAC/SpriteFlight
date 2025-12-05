@@ -1,46 +1,30 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
-    public UIDocument uIDocument;
+    public UIMgr uiMgr;
     public GameObject explosionEffect;
     public GameObject boosterFlame;
+    public GameObject borders;
     public float thrustForce = 1f;
     public float maxSpeed = 5f;
-    public float scoreMultiplier = 10f;
+    public AudioClip boosterClip;
 
-    float score = 0f;
-    float elapsedTime = 0f;
+    
     Rigidbody2D rb;
-    Label scoreText;
-    Button restartButton;
+    AudioSource audioSource;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        scoreText = uIDocument.rootVisualElement
-            .Q<Label>("ScoreLabel");
-        restartButton = uIDocument.rootVisualElement
-            .Q<Button>("RestartButton");
-        restartButton.style.display = DisplayStyle.None;
-        restartButton.clicked += ReloadScene;
+        audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
     {
-        UpdateScore();
         MovePlayer();
         SetBoosterView();
-    }
-
-    void UpdateScore()
-    {
-        elapsedTime += Time.deltaTime;
-        score = Mathf.FloorToInt(elapsedTime * scoreMultiplier);
-        scoreText.text = $" Score : {score} ";
     }
 
     void MovePlayer()
@@ -49,10 +33,8 @@ public class PlayerController : MonoBehaviour
         if (Mouse.current.leftButton.isPressed) 
         {
             // 마우스 방향 정하기
-            Vector3 mousePos = Camera.main.
-                ScreenToWorldPoint(Mouse.current.position.value);
-            Vector2 direction = 
-                (mousePos - transform.position).normalized;
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.value);
+            Vector2 direction = (mousePos - transform.position).normalized;
             
             // 마우스 방향으로 플레이어 움직이기
             transform.up = direction;
@@ -60,8 +42,7 @@ public class PlayerController : MonoBehaviour
 
             if (rb.linearVelocity.magnitude > maxSpeed) 
             {
-                rb.linearVelocity = 
-                    rb.linearVelocity.normalized * maxSpeed;
+                rb.linearVelocity = rb.linearVelocity.normalized * maxSpeed;
             }
         }
     }
@@ -72,25 +53,21 @@ public class PlayerController : MonoBehaviour
         {
             // 부스터 보이기
             boosterFlame.SetActive(true);
+            audioSource.PlayOneShot(boosterClip);
         }
         else if (Mouse.current.leftButton.wasReleasedThisFrame)
         {
             // 부스터 감추기
             boosterFlame.SetActive(false);
+            audioSource.Stop();
         }
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
         Destroy(gameObject);
-        Instantiate(explosionEffect, 
-            transform.position, transform.rotation);
-        restartButton.style.display = DisplayStyle.Flex;
-    }
-
-    void ReloadScene()
-    {
-        SceneManager.LoadScene(
-            SceneManager.GetActiveScene().name);
+        Instantiate(explosionEffect, transform.position, transform.rotation);
+        uiMgr.GameOver();
+        borders.SetActive(false);
     }
 }
