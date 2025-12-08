@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
     public float thrustForce = 1f;
     public float maxSpeed = 5f;
     public AudioClip boosterClip;
+    public InputAction moveFoward;
+    public InputAction lookPosition;
 
     
     Rigidbody2D rb;
@@ -19,6 +21,8 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         audioSource = GetComponent<AudioSource>();
+        moveFoward.Enable();
+        lookPosition.Enable();
     }
 
     void Update()
@@ -30,10 +34,12 @@ public class PlayerController : MonoBehaviour
     void MovePlayer()
     {
         // 마우스 왼쪽 버튼이 지금 눌렸느냐 판단
-        if (Mouse.current.leftButton.isPressed) 
+        // if (Mouse.current.leftButton.isPressed) 
+        if (moveFoward.IsPressed()) 
         {
             // 마우스 방향 정하기
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.value);
+            //Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.value);
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(lookPosition.ReadValue<Vector2>());
             Vector2 direction = (mousePos - transform.position).normalized;
             
             // 마우스 방향으로 플레이어 움직이기
@@ -49,13 +55,15 @@ public class PlayerController : MonoBehaviour
 
     void SetBoosterView()
     {
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        // if (Mouse.current.leftButton.wasPressedThisFrame)
+        if (moveFoward.WasPressedThisFrame())
         {
             // 부스터 보이기
             boosterFlame.SetActive(true);
             audioSource.PlayOneShot(boosterClip);
         }
-        else if (Mouse.current.leftButton.wasReleasedThisFrame)
+        // else if (Mouse.current.leftButton.wasReleasedThisFrame)
+        else if (moveFoward.WasReleasedThisFrame())
         {
             // 부스터 감추기
             boosterFlame.SetActive(false);
